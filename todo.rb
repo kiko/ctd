@@ -3,26 +3,11 @@ require 'optparse'
 require 'json'
 require 'pp'
 
-json = <<EOF
-{"todo":
-  {"version":"0.0.01",
-    "notes":
-    [
-      { "priority":"medium",
-        "author":"Tadahiko Uehara",
-        "time":"123123",
-        "content":"write a devtodo in Ruby" }
-    ]
-  }
-}
-EOF
-
-#p json = File.read('data.json')
+json = File.read('data.json')
 
 original = JSON.parse(json)
 notes = original['todo']['notes']
 
-p notes
 options = {}
 
 $0 = "#{__FILE__} #{ARGV.join(' ')}"
@@ -33,18 +18,28 @@ op = OptionParser.new{|o|
 
 op.parse!(ARGV)
 
-p options
+class Note < Struct.new(:content, :author, :time, :childs)
+  def initialize(content)
+    self.content = content
+    self.author  = 'Tadahiko Uehara'
+    self.time    = Time.now.to_i
+    self.childs  = []
+  end
 
+  def to_json
+    { content: content,
+      author:  author,
+      time:    time,
+      childs:  childs,
+    }.to_json
+  end
+end
 
 while line = Readline.readline('text> ', true)
   break if line.empty? or line == 'exit'
 
-  note = {
-    content: line,
-    author:  'Tadahiko Uehara',
-    time: Time.now.to_i,
-    childs: []
-  }
+  note = Note.new(line)
+
   notes << note
 
   notes.each_with_index do |item, i|
@@ -52,7 +47,5 @@ while line = Readline.readline('text> ', true)
   end
 
   open('data.json', 'wb+') { |f| f.write original.to_json }
-
-  #p json = File.read('data.json')
 end
 
