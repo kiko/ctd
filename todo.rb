@@ -4,20 +4,15 @@ require 'optparse'
 require 'json'
 require 'pp'
 
-json = File.read('data.json')
+module User
+  def name
+    `git config --get user.name`
+  end
 
-original = JSON.parse(json)
-notes = original['todo']['notes']
-
-options = {}
-
-$0 = "#{__FILE__} #{ARGV.join(' ')}"
-op = OptionParser.new{|o|
-  o.on('-a', '--add', 'add new item'){ options[:add] = true }
-  o.on('-h', '--help', 'help'){ puts o }
-}
-
-op.parse!(ARGV)
+  def email
+    `git config --get user.email`
+  end
+end
 
 class Note < Struct.new(:content, :author, :time, :childs)
   def initialize(content)
