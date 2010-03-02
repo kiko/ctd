@@ -5,12 +5,14 @@ require 'json'
 require 'pp'
 
 module User
-  def name
-    `git config --get user.name`
-  end
+  class << self
+    def name
+      `git config --get user.name`
+    end
 
-  def email
-    `git config --get user.email`
+    def email
+      `git config --get user.email`
+    end
   end
 end
 
