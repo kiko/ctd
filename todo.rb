@@ -59,7 +59,6 @@ class Notes
 
   def remove(id)
     @notes.delete_at(id)
-    exit
   end
 
   def list
