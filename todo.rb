@@ -17,11 +17,13 @@ module User
 end
 
 class Note < Struct.new(:content, :author, :time, :childs)
-  def initialize(content)
+  include User
+
+  def initialize(content, author = nil, time = nil, childs = [])
     self.content = content
-    self.author  = 'Tadahiko Uehara'
-    self.time    = Time.now.to_i
-    self.childs  = []
+    self.author  = author || User.name
+    self.time    = time || Time.now.to_i
+    self.childs  = childs
   end
 
   def to_json
