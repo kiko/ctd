@@ -27,6 +27,15 @@ class Note < Struct.new(:content, :author, :time, :childs)
     self.author  = author || User.name
     self.time    = time
     self.childs  = childs
+
+    unless childs.empty?
+      self.childs.map! do |note|
+        Note.new(note['content'],
+                 note['author'],
+                 note['time'],
+                 note['childs'],)
+      end
+    end
   end
 
   def to_json
