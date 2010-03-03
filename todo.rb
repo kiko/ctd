@@ -76,9 +76,15 @@ class Notes
     end
   end
 
-  def list
-    @notes.each_with_index do |note, i|
-      puts "#{i + 1}. #{note['content']}, by #{note['author']}"
+  def list(list = @notes, parent_id = nil)
+    list.each_with_index do |note, i|
+      prefix = parent_id ? "#{parent_id}." : ''
+      puts "#{prefix}#{i+1}. #{note.content} by #{note.author}"
+
+      unless note.childs.empty?
+        indent = 1
+        self.list(note.childs, i+1)
+      end
     end
   end
 
