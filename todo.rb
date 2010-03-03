@@ -22,10 +22,10 @@ end
 class Note < Struct.new(:content, :author, :time, :childs)
   include User
 
-  def initialize(content, author = nil, time = nil, childs = [])
+  def initialize(content, author = nil, time = Time.now.to_i, childs = [])
     self.content = content
     self.author  = author || User.name
-    self.time    = time || Time.now.to_i
+    self.time    = time
     self.childs  = childs
   end
 
