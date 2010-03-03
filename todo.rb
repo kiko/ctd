@@ -59,7 +59,12 @@ class Notes
   end
 
   def remove(id)
-    @notes.delete_at(id)
+    parent, child = id
+    if child
+      @notes[parent].childs.delete_at(child)
+    else
+      @notes.delete_at(parent)
+    end
   end
 
   def list
@@ -88,14 +93,18 @@ options = {}
 $0 = "#{__FILE__} #{ARGV.join(' ')}"
 op = OptionParser.new{|o|
   o.on('-a', '--add', 'add new item'){ options[:add] = true }
-  o.on('-d', '--remove ID', Integer, 'remove an item'){|d| options[:remove] = d}
-  o.on('-h', '--help', 'help'){ puts o; exit }
+  o.on('-c', '--child Parent_ID', Integer, 'add child item under parent'){ |id| options[:add] = id-1 }
+  o.on('-d', '--remove ID', 'remove an item'){ |id| options[:remove] = id }
+  o.on_tail('-h', '--help', 'help'){ puts o; exit }
 }
 
 op.parse!(ARGV)
 
 if id = options[:remove]
+  id = id.to_s.split('.').map!{|s| s.to_i - 1}
   notes.remove(id)
+  notes.save
+  notes.list
   exit
 end
 
