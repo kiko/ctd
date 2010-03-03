@@ -125,16 +125,24 @@ end
 
 if options[:add]
   while line = Readline.readline('text> ', true)
-    break if line.empty? or line == 'exit'
+    break if line.empty? or line == 'q'
 
     note = Note.new(line)
-    notes.add(note)
 
-    open('data.json', 'wb+') { |f| f.write notes.original.to_json }
+    if options[:add].kind_of? Integer
+      id = options[:add]
+      parent = notes.notes[id]
+      parent.childs << note
+    else
+      notes.add(note)
+    end
+
+    notes.save
 
     notes.list
-    puts "Added. To finish type 'exit' or press enter key"
+    puts "Added. To finish press 'q' or enter key"
   end
+  exit
 end
 
 notes.list
