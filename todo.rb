@@ -82,7 +82,6 @@ class Notes
       puts "#{prefix}#{i+1}. #{note.content} by #{note.author}"
 
       unless note.childs.empty?
-        indent = 1
         self.list(note.childs, i+1)
       end
     end
