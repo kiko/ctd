@@ -4,6 +4,9 @@ require 'optparse'
 require 'json'
 require 'pp'
 
+
+RC_FILE = 'todo.json'
+
 module User
   class << self
     def name
@@ -37,20 +40,18 @@ end
 
 class Notes
   attr_reader :notes, :original
-  def initialize(file = nil)
-    json = File.read(file || 'data.json')
 
-    @original = JSON.parse(json) || default
-    @notes = @original['todo']['notes']
-    # @notes = []
-    # @original['todo']['notes'].each do |note|
-    #
-    #   @notes << Note.new(note['content'],
-    #            note['author'],
-    #            note['time'],
-    #                       note['childs'],
-    #           )
-    #end
+  def initialize(file = RC_FILE)
+    json = File.read(file || template)
+    @original = JSON.parse(json)
+
+    @notes = []
+    @original['todo']['notes'].each do |note|
+      @notes << Note.new(note['content'],
+                         note['author'],
+                         note['time'],
+                         note['childs'],)
+    end
   end
 
   def add(note)
@@ -65,6 +66,11 @@ class Notes
     @notes.each_with_index do |note, i|
       puts "#{i + 1}. #{note['content']}, by #{note['author']}"
     end
+  end
+
+  def save(file = RC_FILE)
+    @original['todo']['notes'] = @notes
+    open(file, 'wb+') { |f| f.write @original.to_json }
   end
 
   def template
