@@ -21,15 +21,17 @@ module User
   end
 end
 
-class Note < Struct.new(:content, :author, :time, :childs, :done)
+class Note < Struct.new(:content, :author, :time, :childs, :done, :priority)
   include User
 
-  def initialize(content, author = nil, time = Time.now.to_i, childs = [], done = nil)
-    self.content = content
-    self.author  = author || User.name
-    self.time    = time
-    self.childs  = childs
-    self.done    = done
+  def initialize(content, author = nil, time = Time.now.to_i,
+                 childs = [], done = nil, priority = nil)
+    self.content  = content
+    self.author   = author || User.name
+    self.time     = time
+    self.childs   = childs
+    self.done     = done
+    self.priority = priority
 
     unless childs.empty?
       self.childs.map! do |note|
@@ -38,6 +40,7 @@ class Note < Struct.new(:content, :author, :time, :childs, :done)
                        note['time'],
                        note['childs'],
                        note['done'],
+                       note['priority'],
                        )
       end
     end
@@ -48,11 +51,12 @@ class Note < Struct.new(:content, :author, :time, :childs, :done)
   end
 
   def to_json
-    { content: content,
-      author:  author,
-      time:    time,
-      childs:  childs,
-      done:    done,
+    { content:  content,
+      author:   author,
+      time:     time,
+      childs:   childs,
+      done:     done,
+      priority: priority,
     }.to_json
   end
 end
@@ -72,6 +76,7 @@ class Notes
                          note['time'],
                          note['childs'],
                          note['done'],
+                         note['priority'],
                          )
     end
   end
@@ -100,12 +105,14 @@ class Notes
 
   # TODO: Add indents for child items
   def list(list = @notes, parent_id = nil, options)
-    list.each_with_index do |note, i|
+    sorted = list.sort_by{ |n| n.priority }
+    sorted.each_with_index do |note, i|
+    # self.sort_by(:priority).each_with_index do |note, i|
       next if note.done && !options[:all]
 
       prefix = parent_id ? "#{parent_id}." : ''
       author = options[:user] ? " by #{User.name}" : ''
-      puts "#{prefix}#{i+1}. #{note.content}#{author}"
+      puts "#{prefix}#{i+1}. #{note.content}#{author} [#{note.priority}]"
 
       unless note.childs.empty?
         self.list(note.childs, i+1, options)
@@ -137,6 +144,7 @@ op = OptionParser.new{|o|
   o.on('-d', '--done ID', 'archive an item'){ |id| options[:archive] = id }
   o.on('-u', '--user', 'show username with list'){ options[:user] = true }
   o.on('-A', '--all', 'show all includes archived'){ options[:all] = true }
+  o.on('-p', '--priority Num', Integer, 'give priority an item'){ |p| options[:priority] = p }
   o.on_tail('-h', '--help', 'Show this help'){ puts o; exit }
 }
 op.parse!(ARGV)
@@ -172,6 +180,15 @@ if options[:add]
     else
       @notes.add(note)
     end
+
+    line = Readline.readline('Priority> ', true)
+      if line.empty?
+        priority = 3
+        break
+      end
+      priority = line.to_i
+
+    note.priority = priority
 
     @notes.save
 
