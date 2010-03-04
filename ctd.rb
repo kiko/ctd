@@ -58,6 +58,7 @@ class Note < Struct.new(:content, :author, :time, :childs, :done)
 end
 
 class Notes
+  include User
   attr_reader :notes, :original
 
   def initialize(file = RC_FILE)
@@ -98,15 +99,16 @@ class Notes
   end
 
   # TODO: Add indents for child items
-  def list(list = @notes, parent_id = nil)
+  def list(list = @notes, parent_id = nil, options)
     list.each_with_index do |note, i|
-      next if note.done #FIXME: number incremets
+      next if note.done && !options[:all]
 
       prefix = parent_id ? "#{parent_id}." : ''
-      puts "#{prefix}#{i+1}. #{note.content} by #{note.author}"
+      author = options[:user] ? " by #{User.name}" : ''
+      puts "#{prefix}#{i+1}. #{note.content}#{author}"
 
       unless note.childs.empty?
-        self.list(note.childs, i+1)
+        self.list(note.childs, i+1, options)
       end
     end
   end
@@ -133,7 +135,9 @@ op = OptionParser.new{|o|
   o.on('-c', '--child Parent_ID', Integer, 'add child item under parent'){ |id| options[:add] = id-1 }
   o.on('-D', '--remove ID', 'remove an item'){ |id| options[:remove] = id }
   o.on('-d', '--done ID', 'archive an item'){ |id| options[:archive] = id }
-  o.on_tail('-h', '--help', 'help'){ puts o; exit }
+  o.on('-u', '--user', 'show username with list'){ options[:user] = true }
+  o.on('-A', '--all', 'show all includes archived'){ options[:all] = true }
+  o.on_tail('-h', '--help', 'Show this help'){ puts o; exit }
 }
 op.parse!(ARGV)
 
@@ -163,18 +167,18 @@ if options[:add]
 
     if options[:add].kind_of? Integer
       id = options[:add]
-      parent = notes.notes[id]
+      parent = @notes.notes[id]
       parent.childs << note
     else
-      notes.add(note)
+      @notes.add(note)
     end
 
-    notes.save
+    @notes.save
 
-    notes.list
+    @notes.list(options)
     puts "Added. To finish press 'q' or enter key"
   end
   exit
 end
 
-notes.list
+@notes.list(options)
