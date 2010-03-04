@@ -19,23 +19,30 @@ module User
   end
 end
 
-class Note < Struct.new(:content, :author, :time, :childs)
+class Note < Struct.new(:content, :author, :time, :childs, :done)
   include User
 
-  def initialize(content, author = nil, time = Time.now.to_i, childs = [])
+  def initialize(content, author = nil, time = Time.now.to_i, childs = [], done = nil)
     self.content = content
     self.author  = author || User.name
     self.time    = time
     self.childs  = childs
+    self.done    = done
 
     unless childs.empty?
       self.childs.map! do |note|
-        Note.new(note['content'],
-                 note['author'],
-                 note['time'],
-                 note['childs'],)
+        self.class.new(note['content'],
+                       note['author'],
+                       note['time'],
+                       note['childs'],
+                       note['done'],
+                       )
       end
     end
+  end
+
+  def archive
+    self.done = Time.now.to_i
   end
 
   def to_json
@@ -43,6 +50,7 @@ class Note < Struct.new(:content, :author, :time, :childs)
       author:  author,
       time:    time,
       childs:  childs,
+      done:    done,
     }.to_json
   end
 end
@@ -59,7 +67,9 @@ class Notes
       @notes << Note.new(note['content'],
                          note['author'],
                          note['time'],
-                         note['childs'],)
+                         note['childs'],
+                         note['done'],
+                         )
     end
   end
 
@@ -76,8 +86,20 @@ class Notes
     end
   end
 
+  def archive(id)
+    get(id).archive
+  end
+
+  def get(id)
+    parent, child = id
+    return child ? @notes[parent].childs[child] : @notes[parent]
+  end
+
+  # TODO: Add indents for child items
   def list(list = @notes, parent_id = nil)
     list.each_with_index do |note, i|
+      next if note.done #FIXME: number incremets
+
       prefix = parent_id ? "#{parent_id}." : ''
       puts "#{prefix}#{i+1}. #{note.content} by #{note.author}"
 
@@ -115,8 +137,16 @@ op = OptionParser.new{|o|
 op.parse!(ARGV)
 
 if id = options[:remove]
+  remove_or_archive(:remove, id)
+end
+
+if id = options[:archive]
+  remove_or_archive(:archive, id)
+end
+
+def remove_or_archive(meth, id)
   id = id.to_s.split('.').map!{|s| s.to_i - 1}
-  notes.remove(id)
+  notes.send(meth, id)
   notes.save
   notes.list
   exit
