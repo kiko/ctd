@@ -137,22 +137,22 @@ op = OptionParser.new{|o|
 }
 op.parse!(ARGV)
 
-notes = Notes.new
+@notes = Notes.new
+
+def remove_or_archive(meth, id, options)
+  id = id.to_s.split('.').map!{|s| s.to_i - 1}
+  @notes.send(meth, id)
+  @notes.save
+  @notes.list(options)
+  exit
+end
 
 if id = options[:remove]
-  remove_or_archive(:remove, id)
+  remove_or_archive(:remove, id, options)
 end
 
 if id = options[:archive]
-  remove_or_archive(:archive, id)
-end
-
-def remove_or_archive(meth, id)
-  id = id.to_s.split('.').map!{|s| s.to_i - 1}
-  notes.send(meth, id)
-  notes.save
-  notes.list
-  exit
+  remove_or_archive(:archive, id, options)
 end
 
 if options[:add]
