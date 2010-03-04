@@ -131,7 +131,7 @@ $0 = "#{__FILE__} #{ARGV.join(' ')}"
 op = OptionParser.new{|o|
   o.on('-a', '--add', 'add new item'){ options[:add] = true }
   o.on('-c', '--child Parent_ID', Integer, 'add child item under parent'){ |id| options[:add] = id-1 }
-  o.on('-r', '--remove ID', 'remove an item'){ |id| options[:remove] = id }
+  o.on('-D', '--remove ID', 'remove an item'){ |id| options[:remove] = id }
   o.on('-d', '--done ID', 'archive an item'){ |id| options[:archive] = id }
   o.on_tail('-h', '--help', 'help'){ puts o; exit }
 }
