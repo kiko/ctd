@@ -124,7 +124,9 @@ class Notes
   end
 end
 
-options = {}
+options = {:user => false,
+           :all  => false,
+          }
 $0 = "#{__FILE__} #{ARGV.join(' ')}"
 op = OptionParser.new{|o|
   o.on('-a', '--add', 'add new item'){ options[:add] = true }
