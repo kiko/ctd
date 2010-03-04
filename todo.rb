@@ -1,9 +1,11 @@
 #! /usr/bin/env ruby
+#
+# CTD: Collaborative ToDo
+#
 require 'readline'
 require 'optparse'
 require 'json'
 require 'pp'
-
 
 RC_FILE = 'todo.json'
 
@@ -59,7 +61,7 @@ class Notes
   attr_reader :notes, :original
 
   def initialize(file = RC_FILE)
-    json = File.read(file || template)
+    json = File.read(file) || template
     @original = JSON.parse(json)
 
     @notes = []
@@ -122,19 +124,18 @@ class Notes
   end
 end
 
-notes = Notes.new
-
 options = {}
-
 $0 = "#{__FILE__} #{ARGV.join(' ')}"
 op = OptionParser.new{|o|
   o.on('-a', '--add', 'add new item'){ options[:add] = true }
   o.on('-c', '--child Parent_ID', Integer, 'add child item under parent'){ |id| options[:add] = id-1 }
-  o.on('-d', '--remove ID', 'remove an item'){ |id| options[:remove] = id }
+  o.on('-r', '--remove ID', 'remove an item'){ |id| options[:remove] = id }
+  o.on('-d', '--done ID', 'archive an item'){ |id| options[:archive] = id }
   o.on_tail('-h', '--help', 'help'){ puts o; exit }
 }
-
 op.parse!(ARGV)
+
+notes = Notes.new
 
 if id = options[:remove]
   remove_or_archive(:remove, id)
