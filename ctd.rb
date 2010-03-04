@@ -182,12 +182,8 @@ if options[:add]
     end
 
     line = Readline.readline('Priority> ', true)
-      if line.empty?
-        priority = 3
-        break
-      end
-      priority = line.to_i
 
+    priority = line.empty? ? 3 : line.to_i
     note.priority = priority
 
     @notes.save
