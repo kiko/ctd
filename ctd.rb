@@ -65,8 +65,15 @@ class Notes
   include User
   attr_reader :notes, :original
 
-  def initialize(file = RC_FILE)
-    json = File.read(file) || template
+  def initialize(file = RC_FILE, options)
+    @options = options
+    begin
+      json = File.read(file)
+    rescue
+      puts "No todo entry found. Create your first one with 'ctd -a'"
+      json = template
+    end
+
     @original = JSON.parse(json)
 
     @notes = []
