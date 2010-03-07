@@ -94,6 +94,7 @@ class Notes
 
   def remove(id)
     parent, child = id
+    @notes = sort_by(@options[:sort_by])
     if child
       @notes[parent].childs.delete_at(child)
     else
@@ -106,23 +107,30 @@ class Notes
   end
 
   def get(id)
+    @notes = sort_by(@options[:sort_by])
     parent, child = id
     return child ? @notes[parent].childs[child] : @notes[parent]
   end
 
-  # TODO: Add indents for child items
-  def list(list = @notes, parent_id = nil, options)
-    sorted = list.sort_by{ |n| n.priority }
+  def sort_by(attr)
+    @notes.sort_by{ |n| n[attr] }
+  end
+
+  # TODO: Mess!
+  def list(list = @notes, parent_id = nil)
+    # list = @notes = sort_by(options[:sort_by])
+    way = @options[:sort_by]
+    sorted = list.sort_by{ |note| note[way] }
+
     sorted.each_with_index do |note, i|
-    # self.sort_by(:priority).each_with_index do |note, i|
-      next if note.done && !options[:all]
+      next if note.done && !@options[:all]
 
-      prefix = parent_id ? "#{parent_id}." : ''
-      author = options[:user] ? " by #{User.name}" : ''
-      puts "#{prefix}#{i+1}. #{note.content}#{author} [#{note.priority}]"
+      prefix = parent_id ? "\s\s#{parent_id}." : ''
+      author = @options[:user] ? " by #{User.name}" : ''
+      puts "\s\s#{prefix}#{i+1}. #{note.content}#{author} [#{note.priority}]"
 
-      unless note.childs.empty?
-        self.list(note.childs, i+1, options)
+      unless note.childs.empty? # check this earlier so we can add '+' to parent.
+        self.list(note.childs, i+1)
       end
     end
   end
@@ -140,8 +148,9 @@ class Notes
   end
 end
 
-options = {:user => false,
-           :all  => false,
+options = {:user    => false,
+           :all     => false,
+           :sort_by => :priority,
           }
 $0 = "#{__FILE__} #{ARGV.join(' ')}"
 op = OptionParser.new{|o|
@@ -156,22 +165,26 @@ op = OptionParser.new{|o|
 }
 op.parse!(ARGV)
 
-@notes = Notes.new
+@notes = Notes.new(options)
 
-def remove_or_archive(meth, id, options)
+def remove_or_archive(meth, id)
   id = id.to_s.split('.').map!{|s| s.to_i - 1}
   @notes.send(meth, id)
   @notes.save
-  @notes.list(options)
+  @notes.list
   exit
 end
 
 if id = options[:remove]
-  remove_or_archive(:remove, id, options)
+  remove_or_archive(:remove, id)
 end
 
 if id = options[:archive]
-  remove_or_archive(:archive, id, options)
+  remove_or_archive(:archive, id)
+end
+
+if id = options[:edit]
+  remove_or_archive(:edit, id)
 end
 
 if options[:add]
@@ -188,17 +201,17 @@ if options[:add]
       @notes.add(note)
     end
 
-    line = Readline.readline('Priority> ', true)
+    line = Readline.readline('Priority (3)> ', true)
 
     priority = line.empty? ? 3 : line.to_i
     note.priority = priority
 
     @notes.save
 
-    @notes.list(options)
+    @notes.list
     puts "Added. To finish press 'q' or enter key"
   end
   exit
 end
 
-@notes.list(options)
+@notes.list
