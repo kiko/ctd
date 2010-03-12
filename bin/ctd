@@ -1,0 +1,80 @@
+#!/usr/bin/env ruby
+
+require 'readline'
+require 'optparse'
+require 'json'
+require 'pp'
+
+# module Ctd
+#   module_function
+# end
+options = {:user    => false,
+           :all     => false,
+           :sort_by => :priority,
+          }
+$0 = "#{__FILE__} #{ARGV.join(' ')}"
+op = OptionParser.new{|o|
+  o.on('-a', '--add', 'add new item'){ options[:add] = true }
+  o.on('-c', '--child Parent_ID', Integer, 'add child item under parent'){ |id| options[:add] = id-1 }
+  o.on('-D', '--remove ID', 'remove an item'){ |id| options[:remove] = id }
+  o.on('-d', '--done ID', 'archive an item'){ |id| options[:archive] = id }
+  o.on('-e', '--edit ID', 'edit an item'){ |id| options[:edit] = id }
+  o.on('-u', '--user', 'show username with list'){ options[:user] = true }
+  o.on('-A', '--all', 'show all includes archived'){ options[:all] = true }
+  o.on('-p', '--priority Num', Integer, 'give priority an item'){ |p| options[:priority] = p }
+  o.on_tail('-h', '--help', 'Show this help'){ puts o; exit }
+}
+op.parse!(ARGV)
+
+require 'ctd'
+
+@notes = Ctd.new(options)
+
+def remove_or_archive(meth, id)
+  id = id.to_s.split('.').map!{|s| s.to_i - 1}
+  @notes.send(meth, id)
+  @notes.save
+  @notes.list
+  exit
+end
+
+if id = options[:remove]
+  remove_or_archive(:remove, id)
+end
+
+if id = options[:archive]
+  remove_or_archive(:archive, id)
+end
+
+if id = options[:edit]
+  remove_or_archive(:edit, id)
+end
+
+if options[:add]
+  while line = Readline.readline('text> ', true)
+    break if line.empty? or line == 'q'
+
+    note = Note.new(line)
+
+    if options[:add].kind_of? Integer
+      id = options[:add]
+      parent = @notes.notes[id]
+      parent.childs << note
+    else
+      @notes.add(note)
+    end
+
+    line = Readline.readline('Priority (3)> ', true)
+
+    priority = line.empty? ? 3 : line.to_i
+    note.priority = priority
+
+    @notes.save
+
+    @notes.list
+    puts "Added. To finish press 'q' or enter key"
+  end
+  exit
+end
+
+@notes.list
