@@ -20,13 +20,7 @@ class Ctd
 
     @notes = []
     @original['todo']['notes'].each do |note|
-      @notes << Note.new(note['content'],
-                         note['author'],
-                         note['time'],
-                         note['childs'],
-                         note['done'],
-                         note['priority'],
-                         )
+      @notes << Note.new(note)
     end
   end
 

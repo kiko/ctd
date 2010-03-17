@@ -1,27 +1,26 @@
 require 'ctd/user'
 
-class Note < Struct.new(:content, :author, :time, :childs, :done, :priority)
+class Note < Struct.new(:original, :content, :author, :time, :childs, :done, :priority)
   include User
 
-  def initialize(content, author = nil, time = Time.now.to_i,
-                 childs = [], done = nil, priority = nil)
-    self.content  = content
-    self.author   = author || User.name
-    self.time     = time
-    self.childs   = childs
-    self.done     = done
-    self.priority = priority
+  def initialize(original)
+    self.class.members.each do |member|
+      value = original[member.to_s] || original[member]
 
-    unless childs.empty?
-      self.childs.map! do |note|
-        self.class.new(note['content'],
-                       note['author'],
-                       note['time'],
-                       note['childs'],
-                       note['done'],
-                       note['priority'],
-                       )
+      case member
+      when :original
+        self.original = original
+        next
+      when :author
+        value ||= User.name
+      when :time
+        value ||= Time.now.to_i
+      when :childs
+        value ||= []
+        value.map!{|child| self.class.new(child) }
       end
+
+      self[member] = value
     end
   end
 

@@ -51,7 +51,7 @@ if options[:add]
   while line = Readline.readline('text> ', true)
     break if line.empty? or line == 'q'
 
-    note = Note.new(line)
+    note = Note.new('content' => line)
 
     if options[:add].kind_of? Integer
       id = options[:add]
