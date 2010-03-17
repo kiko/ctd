@@ -30,18 +30,12 @@ class Note < Struct.new(:original, :content, :author, :time, :childs, :done, :pr
 
   def update(data)
     self.content  = data[:content]
-    self.time     = data[:time]
     self.priority = data[:priority]
   end
 
   def to_json
-    { content:  content,
-      author:   author,
-      time:     time,
-      childs:   childs,
-      done:     done,
-      priority: priority,
-    }.to_json
+    keys = self.class.members - [:original]
+    current = Hash[keys.map{|key| [key, self[key]] }]
+    original.merge(current).to_json
   end
 end
-
