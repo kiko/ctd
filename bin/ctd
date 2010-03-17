@@ -5,9 +5,6 @@ require 'optparse'
 require 'json'
 require 'pp'
 
-# module Ctd
-#   module_function
-# end
 options = {:user    => false,
            :all     => false,
            :sort_by => :priority,
