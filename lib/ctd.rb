@@ -93,7 +93,8 @@ class Ctd
 
   def save(file = RC_FILE)
     @original['todo']['notes'] = @notes
-    open(file, 'wb+') { |f| f.write @original.to_json }
+    json = @original.to_json
+    open(file, 'wb+') { |f| f.write(json)  }
   end
 
   def template
