@@ -98,6 +98,11 @@ class Ctd
     end
   end
 
+  def author
+    @options[:user] ? " by #{User.name}" : ''
+  end
+  # mark = parent_id ? "\s+" : "\s\s"
+
   def save(file = RC_FILE)
     @original['todo']['notes'] = @notes
     json = @original.to_json
