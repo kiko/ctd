@@ -29,12 +29,12 @@ class Ctd
   end
 
   def remove(id)
-    p '------------------'
-    p @target = get(id)
-    p @notes.find{|n| n == @target}
-    p '------------------'
+    # p '------------------'
+    # p @target = get(id)
+    # p @notes.find{|n| n == @target}
+    # p '------------------'
+    @notes = sort(@notes)
     parent, child = id
-    @notes = sort_by(@options[:sort_by])
     if child
       @notes[parent].childs.delete_at(child)
     else
@@ -48,15 +48,10 @@ class Ctd
 
   # TODO: make this recursive
   def get(id)
-    @notes = sort_by(@options[:sort_by])
-    # @notes.sort_by(@options[:sort_by])
+    # @notes = sort_by(@options[:sort_by])
+    @notes = sort(@notes)
     parent, child = id
     return child ? @notes[parent].childs[child] : @notes[parent]
-  end
-
-  def sort_by(attr)
-    @notes.sort_by{ |n| n[attr] }
-    # self.sort_by{ |n| n[attr] }
   end
 
   def edit(id)
@@ -71,22 +66,34 @@ class Ctd
     # note.update(data)
   end
 
-  # TODO: Mess!
-  def list(list = @notes, parent_id = nil)
-    # list = @notes = sort_by(options[:sort_by])
+  # private?
+  def sort(list)
     way = @options[:sort_by]
-    sorted = list.sort_by{ |note| note[way] }
+    list.sort_by{ |note| note[way] }
+  end
 
-    sorted.each_with_index do |note, i|
-      next if note.done && !@options[:all]
+  def list(list = @notes, parent_id = nil, level = 0)
+    indent = '  ' * level
+    sorted = sort(list)
 
-      prefix = parent_id ? "\s\s#{parent_id}." : ''
-      # mark = parent_id ? "\s+" : "\s\s"
-      author = @options[:user] ? " by #{User.name}" : ''
-      puts "\s\s#{prefix}#{i+1}. #{note.content}#{author} [#{note.priority}]"
+    i = 0
+    sorted.each do |note|
+      if note.done && !@options[:all]
+        p "item(#{note.content}) is exluded..."
+        next # unless @options[:all]
+      else
+        i += 1
+      end
+
+      prefix = parent_id ? "  #{indent}#{parent_id}." : '  '
+
+      # id = note.done ? '*  ' : "#{i}. "
+      id = "#{i}. "
+
+      puts "#{prefix}#{id}#{note.content}#{author} [#{note.priority}]"
 
       unless note.childs.empty? # check this earlier so we can add '+' to parent.
-        self.list(note.childs, i+1)
+        self.list(note.childs, i, level + 1)
       end
     end
   end
